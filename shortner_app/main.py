@@ -1,5 +1,5 @@
 from fastapi import FastAPI,Depends,HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from . import models, schemas
 from .models import ShortenedUrl
 from .db import engine, get_db
@@ -10,22 +10,22 @@ app = FastAPI()
 models.Base.metadata.create_all(engine)
 
 @app.get('/')
-def home():
+async def home():
     return {'message':'welcome to URL Shortner'}
 
 @app.post("/shorten")
-def get_short_link( url : schemas.url, db: Session = Depends(get_db)):
+async def get_short_link( url : schemas.url, db: AsyncSession = Depends(get_db)):
 
     short_link = create_short_link(url)
     obj = ShortenedUrl(original_url=url.body, short_link=short_link)
     db.add(obj)
-    db.commit()
+    await db.commit()
 
     return {"short_link": short_link}
 
 
 @app.get("/{short_link}")
-def redirect_to_original(short_link: str, db: Session = Depends(get_db)):
+async def redirect_to_original(short_link: str, db: AsyncSession = Depends(get_db)):
     obj = (
         db.query(ShortenedUrl).filter_by(short_link=short_link).order_by(ShortenedUrl.id.desc()).first()
     )
