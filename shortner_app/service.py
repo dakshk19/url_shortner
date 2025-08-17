@@ -2,7 +2,7 @@ import base64
 import hashlib
 
 
-def create_short_link(original_url: str):
+async def create_short_link(original_url: str):
     
     to_encode = f"{original_url}"
 
